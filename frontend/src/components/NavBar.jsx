@@ -9,12 +9,18 @@ function NavBar() {
         marginBottom: "1rem",
       }}
     >
-      <Link to="/" style={{ marginRight: "1rem" }}>
-        Home
-      </Link>
-      <Link to="/login" style={{ marginRight: "1rem" }}>
-        Login
-      </Link>
+        <Link to="/" style={{ marginRight: "4rem" }}>
+            Home
+        </Link>
+        <Link to="/login" style={{ marginRight: "4rem" }}>
+            Login
+        </Link>
+        <Link to="/login" style={{ marginRight: "4rem" }}> 
+            Contact
+        </Link>
+        <Link to="/login" style={{ marginRight: "4rem" }}>
+            About
+        </Link>
     </nav>
   );
 }

@@ -25,7 +25,7 @@ function HomePage() {
   const [selectedPart, setSelectedPart] = useState(null);
 
   // filtering parts
-  const filteredParts = parts.filter(part =>
+  let filteredParts = parts.filter(part => 
     part.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -43,13 +43,22 @@ function HomePage() {
   }
 
   return (
-    <div style={{ padding: "2rem" }}>
-        <h1>Car Parts Finder</h1>
-        {/* Search bar */}
-        <SearchBar search={search} setSearch={setSearch} />
-
-        {/* Sorting info */}
-        <SortControls sortOption={sortOption} setSortOption={setSortOption} />
+    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+        <h1 style={{ textAlign: "center", marginBottom: "2rem", color: "#1f2937" }}>
+            🔧 Car Parts Finder
+        </h1>
+        
+        <div style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "1rem",
+            marginBottom: "2rem",
+            flexWrap: "wrap",
+        }}>
+            <SearchBar search={search} setSearch={setSearch} />
+            <SortControls sortOption={sortOption} setSortOption={setSortOption} />
+      </div>
 
         {/* Parts display info */}
         <PartsDisplay 

@@ -3,7 +3,7 @@ function SortControls({ sortOption, setSortOption }) {
     <select
       value={sortOption}
       onChange={(e) => setSortOption(e.target.value)}
-      style={{ marginBottom: "1rem", padding: "0.5rem" }}
+      style={{ marginBottom: "2rem", padding: "0.5rem" }}
     >
       <option value="">Sort By</option>
       <option value="price-low">Price: Low → High</option>

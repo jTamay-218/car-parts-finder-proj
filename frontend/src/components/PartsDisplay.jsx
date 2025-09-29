@@ -9,8 +9,8 @@ function PartsDisplay({ parts, onPartClick }) {
     <div
         style={{
             display: "grid",
-            gap: "1rem",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gap: "1.5rem",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
         }}>
         
         {parts.map((part) => (
