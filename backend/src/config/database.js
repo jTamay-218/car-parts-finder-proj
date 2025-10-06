@@ -1,38 +1,46 @@
-import pkg from 'pg';
-import dotenv from 'dotenv';
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const { Pool } = pkg;
+// Database path
+const dbPath = path.join(__dirname, '../../carpartsus.db');
 
-// Database configuration
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'car_parts_finder',
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+// Create database connection
+let db = null;
+
+// Initialize database connection
+export const initDatabase = async () => {
+  try {
+    db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database
+    });
+    console.log('✅ SQLite database connected successfully');
+    return db;
+  } catch (err) {
+    console.error('❌ Database connection failed:', err.message);
+    throw err;
+  }
 };
 
-// Create connection pool
-const pool = new Pool(dbConfig);
-
-// Handle pool errors
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
-});
+// Get database instance
+export const getDatabase = async () => {
+  if (!db) {
+    await initDatabase();
+  }
+  return db;
+};
 
 // Test database connection
 export const testConnection = async () => {
   try {
-    const client = await pool.connect();
+    const database = await getDatabase();
+    await database.get('SELECT 1');
     console.log('✅ Database connected successfully');
-    client.release();
     return true;
   } catch (err) {
     console.error('❌ Database connection failed:', err.message);
@@ -41,22 +49,51 @@ export const testConnection = async () => {
 };
 
 // Query helper function
-export const query = async (text, params) => {
+export const query = async (sql, params = []) => {
   const start = Date.now();
   try {
-    const res = await pool.query(text, params);
+    const database = await getDatabase();
+    const result = await database.all(sql, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: res.rowCount });
-    return res;
+    console.log('Executed query', { sql, duration, rows: result.length });
+    return { rows: result, rowCount: result.length };
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
   }
 };
 
-// Transaction helper
-export const getClient = async () => {
-  return await pool.connect();
+// Query helper for single row
+export const queryOne = async (sql, params = []) => {
+  const start = Date.now();
+  try {
+    const database = await getDatabase();
+    const result = await database.get(sql, params);
+    const duration = Date.now() - start;
+    console.log('Executed query', { sql, duration, rows: result ? 1 : 0 });
+    return { rows: result ? [result] : [], rowCount: result ? 1 : 0 };
+  } catch (error) {
+    console.error('Database query error:', error);
+    throw error;
+  }
 };
 
-export default pool;
+// Execute helper for INSERT/UPDATE/DELETE
+export const execute = async (sql, params = []) => {
+  const start = Date.now();
+  try {
+    const database = await getDatabase();
+    const result = await database.run(sql, params);
+    const duration = Date.now() - start;
+    console.log('Executed query', { sql, duration, changes: result.changes });
+    return result;
+  } catch (error) {
+    console.error('Database execute error:', error);
+    throw error;
+  }
+};
+
+export default db;
+
+
+

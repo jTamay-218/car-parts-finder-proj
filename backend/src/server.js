@@ -20,6 +20,9 @@ import searchRoutes from './routes/search.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 
+// Import database
+import { initDatabase, testConnection } from './config/database.js';
+
 // Load environment variables
 dotenv.config();
 
@@ -66,6 +69,45 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Simple products endpoint for frontend
+app.get('/api/products', async (req, res) => {
+  try {
+    const { query, execute } = await import('./config/database.js');
+    const result = await query(`
+      SELECT 
+        pl._id as id,
+        pl.name,
+        pl.price,
+        pl.condition,
+        pl.description,
+        pl.image,
+        pl.status,
+        cb.name as brand_name,
+        cm.name as model_name,
+        cm.production_year,
+        pc.name as category_name
+      FROM product_listings pl
+      LEFT JOIN car_brands cb ON pl.brand_id = cb._id
+      LEFT JOIN car_models cm ON pl.model_id = cm._id
+      LEFT JOIN categories pc ON pl.category_id = pc._id
+      WHERE pl.status = 'AVAILABLE'
+      ORDER BY pl.created_date DESC
+    `);
+    
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching products',
+      error: error.message
+    });
+  }
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -99,11 +141,26 @@ app.get('/', (req, res) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
-});
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    // Initialize database
+    await initDatabase();
+    await testConnection();
+    
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+      console.log(`🔧 Products API: http://localhost:${PORT}/api/products`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 export default app;

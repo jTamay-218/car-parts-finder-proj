@@ -112,3 +112,6 @@ export class CarBrand {
     return parseInt(result.rows[0].count);
   }
 }
+
+
+

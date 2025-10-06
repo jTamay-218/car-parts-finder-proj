@@ -1,27 +1,49 @@
-function SearchBar({ search, setSearch, resultCount }) {
+function SearchBar({ search, setSearch }) {
   return (
-    <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+    <div style={{ position: "relative", width: "100%" }}>
       <input
         type="text"
         placeholder="Search parts by name, brand, or model..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        className="form-input"
         style={{
-          padding: "0.75rem 1rem",
-          width: "400px",
-          borderRadius: "8px",
-          border: "2px solid #e5e7eb",
-          fontSize: "16px",
-          outline: "none",
-          transition: "border-color 0.2s"
+          paddingLeft: "3rem",
+          fontSize: "1rem",
+          height: "3rem",
+          borderRadius: "2rem",
+          border: "2px solid var(--gray-200)",
+          backgroundColor: "white",
+          boxShadow: "var(--shadow-sm)"
         }}
-        onFocus={(e) => e.target.style.borderColor = "#3b82f6"}
-        onBlur={(e) => e.target.style.borderColor = "#e5e7eb"}
       />
+      <div style={{
+        position: "absolute",
+        left: "1rem",
+        top: "50%",
+        transform: "translateY(-50%)",
+        color: "var(--gray-400)",
+        fontSize: "1.25rem"
+      }}>
+        🔍
+      </div>
       {search && (
-        <p style={{ marginTop: "0.5rem", color: "#6b7280", fontSize: "14px" }}>
-          Showing {resultCount} result{resultCount !== 1 ? 's' : ''}
-        </p>
+        <button
+          onClick={() => setSearch("")}
+          style={{
+            position: "absolute",
+            right: "1rem",
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "none",
+            border: "none",
+            color: "var(--gray-400)",
+            cursor: "pointer",
+            fontSize: "1.25rem"
+          }}
+        >
+          ✕
+        </button>
       )}
     </div>
   );
