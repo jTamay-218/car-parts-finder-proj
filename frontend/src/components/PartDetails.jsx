@@ -1,4 +1,10 @@
+import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+
 function PartDetails({ part, onClose }) {
+  const { addToCart } = useCart();
+  const { isLoggedIn } = useAuth();
+
   const getConditionColor = (condition) => {
     switch (condition?.toUpperCase()) {
       case "NEW":
@@ -339,7 +345,8 @@ function PartDetails({ part, onClose }) {
               </button>
               <button
                 onClick={() => {
-                  alert('Add to cart functionality would work here!');
+                  addToCart(part);
+                  alert(`${part.name} added to cart!`);
                 }}
                 className="btn btn-primary"
                 style={{ flex: 1 }}

@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useCart } from '../contexts/CartContext';
 
 function NavBar() {
   const location = useLocation();
   const { user, logout, isSeller, isLoggedIn } = useAuth();
+  const { cartItems } = useCart();
   
   // Base navigation items for all users
   const baseNavItems = [
@@ -118,12 +120,16 @@ function NavBar() {
             gap: '0.75rem',
             alignItems: 'center'
           }}>
+            {/* Cart */}
+                <Link to="/cart" className="btn btn-outline btn-sm" style={{ textDecoration: 'none' }}>
+                  🛒 {cartItems.length} items
+                </Link>
             {isLoggedIn() ? (
               <>
                 <button className="btn btn-secondary btn-sm">
                   🔔 Notifications
                 </button>
-                
+
                 {/* User Dropdown */}
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                   <button 
