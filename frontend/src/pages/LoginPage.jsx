@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -9,6 +10,8 @@ function LoginPage() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
+  const location = useLocation();
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,7 +21,8 @@ function LoginPage() {
     try {
       const result = await login(email, password);
       if (result.success) {
-        navigate("/");
+        const from = location.state?.from || "/";
+        navigate(from);
       } else {
         setError(result.error);
       }

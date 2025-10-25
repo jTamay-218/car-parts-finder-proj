@@ -3,16 +3,15 @@ import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 
 function CartPage() {
-  const { cartItems, removeFromCart, clearCart } = useCart();
+  const { cartItems = [], removeFromCart, clearCart, total = 0 } = useCart();
   const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
     if (!isLoggedIn()) {
-      navigate("/login");
+      navigate("/login", { state: { from: "/checkout" } });
     } else {
-      alert("Checkout coming soon...");
-      // will implement checkout functionality in the future
+      navigate("/checkout");
     }
   };
 
@@ -28,8 +27,9 @@ function CartPage() {
   }
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2 style={{ marginBottom: "1.5rem" }}>🛒 Your Cart</h2>
+    <div style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
+      <h2 style={{ marginBottom: "1.5rem" }}>🛒 Your Cart ({cartItems.length} items)</h2>
+
       <div style={{ display: "grid", gap: "1rem" }}>
         {cartItems.map((item, index) => (
           <div
@@ -40,11 +40,19 @@ function CartPage() {
               alignItems: "center",
               padding: "1rem",
               border: "1px solid var(--gray-200)",
-              borderRadius: "0.75rem"
+              borderRadius: "0.75rem",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <div style={{ width: "80px", height: "80px", backgroundColor: "#f3f4f6", borderRadius: "0.5rem", overflow: "hidden" }}>
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  backgroundColor: "#f3f4f6",
+                  borderRadius: "0.5rem",
+                  overflow: "hidden",
+                }}
+              >
                 {item.image ? (
                   <img
                     src={`http://localhost:3001/${item.image}`}
@@ -52,7 +60,16 @@ function CartPage() {
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 ) : (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>🔧</div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                    }}
+                  >
+                    🔧
+                  </div>
                 )}
               </div>
               <div>
@@ -60,23 +77,39 @@ function CartPage() {
                 <p style={{ margin: 0, color: "var(--gray-600)" }}>${item.price.toFixed(2)}</p>
               </div>
             </div>
-            <button
-              onClick={() => removeFromCart(item.id)}
-              className="btn btn-outline btn-sm"
-            >
+            <button onClick={() => removeFromCart(item.id)} className="btn btn-outline btn-sm">
               ❌ Remove
             </button>
           </div>
         ))}
       </div>
 
-      <div style={{ marginTop: "2rem", display: "flex", justifyContent: "space-between" }}>
-        <button onClick={clearCart} className="btn btn-secondary">
-          🗑️ Clear Cart
-        </button>
-        <button onClick={handleCheckout} className="btn btn-primary">
-          💳 Checkout
-        </button>
+      {/* Cart Summary */}
+      <div
+        style={{
+          marginTop: "2rem",
+          padding: "1rem",
+          border: "1px solid var(--gray-200)",
+          borderRadius: "0.75rem",
+          backgroundColor: "#f9fafb",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600" }}>
+          <span>Subtotal ({cartItems.length} items):</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <button onClick={clearCart} className="btn btn-secondary" style={{ flex: 1 }}>
+            🗑️ Clear Cart
+          </button>
+          <button onClick={handleCheckout} className="btn btn-primary" style={{ flex: 1 }}>
+            💳 Proceed to Checkout
+          </button>
+        </div>
       </div>
     </div>
   );
