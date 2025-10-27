@@ -1,46 +1,39 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import pkg from 'pg';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { Pool } = pkg;
+dotenv.config();
 
-// Database path
-const dbPath = path.join(__dirname, '../../carpartsus.db');
+// Parse database URL
+const databaseUrl = process.env.DATABASE_URL;
 
-// Create database connection
-let db = null;
+if (!databaseUrl) {
+  console.error('❌ DATABASE_URL is not set in environment variables');
+  process.exit(1);
+}
 
-// Initialize database connection
-export const initDatabase = async () => {
-  try {
-    db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database
-    });
-    console.log('✅ SQLite database connected successfully');
-    return db;
-  } catch (err) {
-    console.error('❌ Database connection failed:', err.message);
-    throw err;
-  }
-};
+// Create a connection pool
+const pool = new Pool({
+  connectionString: databaseUrl,
+  ssl: {
+    rejectUnauthorized: false // Supabase requires SSL
+  },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-// Get database instance
-export const getDatabase = async () => {
-  if (!db) {
-    await initDatabase();
-  }
-  return db;
-};
+// Handle pool errors
+pool.on('error', (err) => {
+  console.error('❌ Unexpected database pool error:', err);
+});
 
 // Test database connection
 export const testConnection = async () => {
   try {
-    const database = await getDatabase();
-    await database.get('SELECT 1');
-    console.log('✅ Database connected successfully');
+    const result = await pool.query('SELECT NOW()');
+    console.log('✅ PostgreSQL database connected successfully');
+    console.log('📅 Database time:', result.rows[0].now);
     return true;
   } catch (err) {
     console.error('❌ Database connection failed:', err.message);
@@ -48,15 +41,30 @@ export const testConnection = async () => {
   }
 };
 
+// Initialize database connection
+export const initDatabase = async () => {
+  try {
+    await testConnection();
+    return pool;
+  } catch (err) {
+    console.error('❌ Database initialization failed:', err.message);
+    throw err;
+  }
+};
+
+// Get database instance
+export const getDatabase = async () => {
+  return pool;
+};
+
 // Query helper function
 export const query = async (sql, params = []) => {
   const start = Date.now();
   try {
-    const database = await getDatabase();
-    const result = await database.all(sql, params);
+    const result = await pool.query(sql, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { sql, duration, rows: result.length });
-    return { rows: result, rowCount: result.length };
+    console.log('Executed query', { sql, duration, rows: result.rowCount });
+    return { rows: result.rows, rowCount: result.rowCount };
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
@@ -67,11 +75,10 @@ export const query = async (sql, params = []) => {
 export const queryOne = async (sql, params = []) => {
   const start = Date.now();
   try {
-    const database = await getDatabase();
-    const result = await database.get(sql, params);
+    const result = await pool.query(sql, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { sql, duration, rows: result ? 1 : 0 });
-    return { rows: result ? [result] : [], rowCount: result ? 1 : 0 };
+    console.log('Executed query', { sql, duration, rows: result.rows.length });
+    return { rows: result.rows, rowCount: result.rows.length };
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
@@ -82,10 +89,9 @@ export const queryOne = async (sql, params = []) => {
 export const execute = async (sql, params = []) => {
   const start = Date.now();
   try {
-    const database = await getDatabase();
-    const result = await database.run(sql, params);
+    const result = await pool.query(sql, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { sql, duration, changes: result.changes });
+    console.log('Executed query', { sql, duration, changes: result.rowCount });
     return result;
   } catch (error) {
     console.error('Database execute error:', error);
@@ -93,7 +99,4 @@ export const execute = async (sql, params = []) => {
   }
 };
 
-export default db;
-
-
-
+export default pool;

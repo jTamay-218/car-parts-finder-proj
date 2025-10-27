@@ -89,6 +89,66 @@ export const requireAdmin = (req, res, next) => {
   next();
 };
 
+// Check if user is seller or admin
+export const requireSeller = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      error: 'Authentication required',
+      message: 'Please log in to access this resource'
+    });
+  }
+
+  if (req.user.role !== 'seller' && req.user.role !== 'admin' && !req.user.admin) {
+    return res.status(403).json({ 
+      error: 'Seller access required',
+      message: 'This action requires seller privileges'
+    });
+  }
+
+  next();
+};
+
+// Check if user is buyer or admin
+export const requireBuyer = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      error: 'Authentication required',
+      message: 'Please log in to access this resource'
+    });
+  }
+
+  if (req.user.role !== 'buyer' && req.user.role !== 'admin' && !req.user.admin) {
+    return res.status(403).json({ 
+      error: 'Buyer access required',
+      message: 'This action requires buyer privileges'
+    });
+  }
+
+  next();
+};
+
+// Check if user has specific role or is admin
+export const requireRole = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ 
+        error: 'Authentication required',
+        message: 'Please log in to access this resource'
+      });
+    }
+
+    // Admins have access to everything
+    if (req.user.admin || roles.includes(req.user.role)) {
+      return next();
+    }
+
+    return res.status(403).json({ 
+      error: 'Insufficient permissions',
+      message: `This action requires one of the following roles: ${roles.join(', ')}`
+    });
+  };
+};
+
 // Check if user owns the resource
 export const requireOwnership = (resourceUserIdField = 'userId') => {
   return (req, res, next) => {

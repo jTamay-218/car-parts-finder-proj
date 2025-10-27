@@ -9,23 +9,27 @@ export class User {
     this.username = data.username;
     this.email = data.email;
     this.password = data.password;
+    this.role = data.role || 'buyer';
     this.admin = data.admin;
     this.createdDate = data.created_date;
   }
 
   // Create a new user
   static async create(userData) {
-    const { firstName, lastName, username, email, password, admin = false } = userData;
+    const { firstName, lastName, username, email, password, role = 'buyer', admin = false } = userData;
+    
+    // Set admin flag based on role if not explicitly provided
+    const isAdmin = admin || role === 'admin';
     
     // Hash password
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
     const result = await query(
-      `INSERT INTO users (first_name, last_name, username, email, password, admin)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO users (first_name, last_name, username, email, password, role, admin)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [firstName, lastName, username, email, hashedPassword, admin]
+      [firstName, lastName, username, email, hashedPassword, role, isAdmin]
     );
     
     return new User(result.rows[0]);

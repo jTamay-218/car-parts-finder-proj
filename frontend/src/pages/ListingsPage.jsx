@@ -1,67 +1,123 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import EditListingModal from "../components/EditListingModal";
 
 function ListingsPage() {
   const { user } = useAuth();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [editingListing, setEditingListing] = useState(null);
 
-  // Mock data for now - in real app this would come from API
+  // Fetch real data from API
   useEffect(() => {
-    const mockListings = [
-      {
-        id: 1,
-        name: "Honda Civic Brake Pads",
-        price: 45.99,
-        condition: "NEW",
-        status: "active",
-        views: 127,
-        inquiries: 5,
-        createdAt: "2024-01-15",
-        image: null
-      },
-      {
-        id: 2,
-        name: "Toyota Camry Alternator",
-        price: 125.00,
-        condition: "USED",
-        status: "sold",
-        views: 89,
-        inquiries: 12,
-        createdAt: "2024-01-10",
-        image: null
-      },
-      {
-        id: 3,
-        name: "BMW 3 Series Headlight",
-        price: 89.99,
-        condition: "REFURBISHED",
-        status: "active",
-        views: 203,
-        inquiries: 8,
-        createdAt: "2024-01-08",
-        image: null
+    const fetchListings = async () => {
+      try {
+        // For now, use a default user ID. In production, this would come from auth
+        const response = await fetch('http://localhost:3001/api/my-listings');
+        const data = await response.json();
+        
+        if (data.success) {
+          setListings(data.data);
+        } else {
+          console.error('Failed to fetch listings:', data.message);
+          // Fallback to mock data if API fails
+          setListings([]);
+        }
+      } catch (error) {
+        console.error('Error fetching listings:', error);
+        // Fallback to empty array
+        setListings([]);
+      } finally {
+        setLoading(false);
       }
-    ];
+    };
     
-    setTimeout(() => {
-      setListings(mockListings);
-      setLoading(false);
-    }, 1000);
+    fetchListings();
   }, []);
 
   const filteredListings = listings.filter(listing => {
-    if (filter === 'all') return true;
-    return listing.status === filter;
+    // Normalize status for filtering (backend converts to lowercase)
+    const status = listing.status?.toLowerCase();
+    
+    if (filter === 'all') {
+      // In 'all' view, show AVAILABLE/active listings
+      return status === 'available' || status === 'active';
+    }
+    // Map frontend filter to actual status values
+    return status === filter;
   });
 
+  const handleEdit = (listing) => {
+    setEditingListing(listing);
+  };
+
+  const handleCloseEdit = () => {
+    setEditingListing(null);
+  };
+
+  const handleUpdateListing = async () => {
+    // Refresh listings after update
+    try {
+      const response = await fetch('http://localhost:3001/api/my-listings');
+      const data = await response.json();
+      
+      if (data.success) {
+        setListings(data.data);
+      }
+    } catch (error) {
+      console.error('Error refreshing listings:', error);
+    }
+  };
+
+  const handleDeactivate = async (listingId) => {
+    if (!window.confirm('Are you sure you want to deactivate this listing?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/my-listings/${listingId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'SOLD' })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the local state - set status to SOLD (which backend returns)
+        setListings(listings.map(listing => 
+          listing.id === listingId 
+            ? { ...listing, status: 'SOLD' }
+            : listing
+        ));
+        alert('Listing deactivated successfully');
+      } else {
+        alert('Failed to deactivate listing: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error deactivating listing:', error);
+      alert('Error deactivating listing');
+    }
+  };
+
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return { bg: '#dcfce7', color: '#166534', text: 'Active' };
-      case 'sold': return { bg: '#dbeafe', color: '#1e40af', text: 'Sold' };
-      case 'pending': return { bg: '#fef3c7', color: '#92400e', text: 'Pending' };
-      default: return { bg: '#f3f4f6', color: '#374151', text: 'Unknown' };
+    // Handle both lowercase and uppercase statuses
+    const statusLower = status?.toLowerCase();
+    switch (statusLower) {
+      case 'active':
+      case 'available': 
+        return { bg: '#dcfce7', color: '#166534', text: 'Active' };
+      case 'sold': 
+        return { bg: '#dbeafe', color: '#1e40af', text: 'Sold' };
+      case 'pending': 
+        return { bg: '#fef3c7', color: '#92400e', text: 'Pending' };
+      case 'inactive':
+        return { bg: '#fee2e2', color: '#991b1b', text: 'Inactive' };
+      default: 
+        return { bg: '#f3f4f6', color: '#374151', text: status?.toUpperCase() || 'Unknown' };
     }
   };
 
@@ -96,8 +152,8 @@ function ListingsPage() {
                   gap: '0.5rem',
                   marginTop: '0.5rem'
                 }}>
-                  <span>{user.avatar}</span>
-                  <span style={{ color: 'var(--gray-600)' }}>{user.name}</span>
+                  <span>{user?.avatar}</span>
+                  <span style={{ color: 'var(--gray-600)' }}>{user?.name}</span>
                   <span style={{
                     backgroundColor: 'var(--secondary-color)',
                     color: 'white',
@@ -170,7 +226,10 @@ function ListingsPage() {
               <div style={{ padding: '1.5rem' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💰</div>
                 <h3 style={{ color: 'var(--gray-800)', marginBottom: '0.25rem' }}>
-                  ${listings.filter(l => l.status === 'sold').reduce((sum, listing) => sum + listing.price, 0).toFixed(2)}
+                  ${listings.filter(l => l.status === 'sold').reduce((sum, listing) => {
+                    const price = typeof listing.price === 'string' ? parseFloat(listing.price) : listing.price;
+                    return sum + price;
+                  }, 0).toFixed(2)}
                 </h3>
                 <p style={{ color: 'var(--gray-600)', fontSize: '0.875rem', margin: 0 }}>
                   Total Sales
@@ -240,7 +299,7 @@ function ListingsPage() {
                           {listing.name}
                         </h3>
                         <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--secondary-color)' }}>
-                          ${listing.price.toFixed(2)}
+                          ${(typeof listing.price === 'string' ? parseFloat(listing.price) : listing.price).toFixed(2)}
                         </div>
                       </div>
                       
@@ -309,7 +368,7 @@ function ListingsPage() {
 
                     {/* Actions */}
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                      <button className="btn btn-outline btn-sm">
+                      <button className="btn btn-outline btn-sm" onClick={() => handleEdit(listing)}>
                         ✏️ Edit
                       </button>
                       <button className="btn btn-outline btn-sm">
@@ -318,8 +377,8 @@ function ListingsPage() {
                       <button className="btn btn-outline btn-sm">
                         💬 Messages
                       </button>
-                      {listing.status === 'active' && (
-                        <button className="btn btn-danger btn-sm">
+                      {(listing.status === 'active' || listing.status === 'AVAILABLE' || listing.status === 'Available') && (
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDeactivate(listing.id)}>
                           🛑 Deactivate
                         </button>
                       )}
@@ -348,6 +407,15 @@ function ListingsPage() {
               💰 List Your First Part
             </button>
           </div>
+        )}
+
+        {/* Edit Modal */}
+        {editingListing && (
+          <EditListingModal
+            listing={editingListing}
+            onClose={handleCloseEdit}
+            onUpdate={handleUpdateListing}
+          />
         )}
       </div>
     </div>

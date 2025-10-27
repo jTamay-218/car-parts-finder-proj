@@ -68,3 +68,4 @@ function ProtectedRoute({ children, requireAuth = true, requireSeller = false })
 }
 
 export default ProtectedRoute;
+

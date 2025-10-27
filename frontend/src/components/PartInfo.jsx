@@ -13,7 +13,8 @@ function PartInfo({ part, onClick }) {
   };
 
   const formatPrice = (price) => {
-    return `$${price.toFixed(2)}`;
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return `$${numPrice.toFixed(2)}`;
   };
 
   const conditionColors = getConditionColor(part.condition);
@@ -40,7 +41,7 @@ function PartInfo({ part, onClick }) {
       }}>
         {part.image ? (
           <img 
-            src={`http://localhost:3001/${part.image}`}
+            src={part.image.startsWith('http') ? part.image : `http://localhost:3001/${part.image}`}
             alt={part.name}
             style={{
               width: "100%",

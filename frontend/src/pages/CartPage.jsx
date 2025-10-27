@@ -55,7 +55,7 @@ function CartPage() {
               >
                 {item.image ? (
                   <img
-                    src={`http://localhost:3001/${item.image}`}
+                    src={item.image.startsWith('http') ? item.image : `http://localhost:3001/${item.image}`}
                     alt={item.name}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -74,7 +74,7 @@ function CartPage() {
               </div>
               <div>
                 <h4 style={{ margin: 0 }}>{item.name}</h4>
-                <p style={{ margin: 0, color: "var(--gray-600)" }}>${item.price.toFixed(2)}</p>
+                <p style={{ margin: 0, color: "var(--gray-600)" }}>${(typeof item.price === 'string' ? parseFloat(item.price) : item.price).toFixed(2)}</p>
               </div>
             </div>
             <button onClick={() => removeFromCart(item.id)} className="btn btn-outline btn-sm">
@@ -99,7 +99,7 @@ function CartPage() {
       >
         <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600" }}>
           <span>Subtotal ({cartItems.length} items):</span>
-          <span>${total.toFixed(2)}</span>
+          <span>${(typeof total === 'string' ? parseFloat(total) : total).toFixed(2)}</span>
         </div>
 
         <div style={{ display: "flex", gap: "1rem" }}>

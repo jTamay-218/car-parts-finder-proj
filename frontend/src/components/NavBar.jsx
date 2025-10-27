@@ -124,7 +124,7 @@ function NavBar() {
                 <Link to="/cart" className="btn btn-outline btn-sm" style={{ textDecoration: 'none' }}>
                   🛒 {cartItems.length} items
                 </Link>
-            {isLoggedIn() ? (
+            {isLoggedIn() && user ? (
               <>
                 <button className="btn btn-secondary btn-sm">
                   🔔 Notifications
@@ -140,8 +140,8 @@ function NavBar() {
                       gap: '0.5rem'
                     }}
                   >
-                    <span>{user.avatar}</span>
-                    <span>{user.name}</span>
+                    <span>{user?.avatar}</span>
+                    <span>{user?.name}</span>
                     <span>▼</span>
                   </button>
                   
@@ -167,7 +167,7 @@ function NavBar() {
                         borderBottom: '1px solid var(--gray-200)',
                         marginBottom: '0.5rem'
                       }}>
-                        {user.name}
+                        {user?.name}
                       </div>
                       <div style={{ 
                         padding: '0.5rem', 
@@ -176,7 +176,7 @@ function NavBar() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        {user.type}
+                        {user?.type}
                       </div>
                       <button
                         onClick={logout}

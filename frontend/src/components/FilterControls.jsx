@@ -77,8 +77,8 @@ function FilterControls({ parts, onFilterChange, filters }) {
           className="form-select"
         >
           <option value="">All Conditions</option>
-          <option value="NEW">New</option>
-          <option value="USED">Used</option>
+          <option value="New">New</option>
+          <option value="Used">Used</option>
         </select>
       </div>
 
