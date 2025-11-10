@@ -8,10 +8,11 @@ import HomePage from "./pages/HomePage";
 import SellPage from "./pages/SellPage";
 import ListingsPage from "./pages/ListingsPage";
 import LoginPage from "./pages/LoginPage";
+import ProfilePage from "./pages/ProfilePage";
 import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
 import CartPage from "./pages/CartPage";
-import OrderPage from "./pages/OrderPage"; // the new place order page
+import OrderPage from "./pages/OrderPage";
 
 function App() {
   return (
@@ -62,7 +63,7 @@ function App() {
                 <ProtectedRoute requireAuth={true}>
                   <div style={{ padding: "2rem", textAlign: "center" }}>
                     <h2>👤 Profile</h2>
-                    <p>Coming soon...</p>
+                    <ProfilePage />
                   </div>
                 </ProtectedRoute>
               }
