@@ -1,0 +1,57 @@
+services:
+  # Backend API Service
+  - type: web
+    name: car-parts-finder-backend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false  # You'll need to add this in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: SUPABASE_URL
+        sync: false  # Add your Supabase URL in dashboard
+      - key: SUPABASE_ANON_KEY
+        sync: false  # Add your Supabase anon key in dashboard
+      - key: FRONTEND_URL
+        value: https://car-parts-finder-frontend.onrender.com
+      - key: MAX_FILE_SIZE
+        value: 5242880
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+    healthCheckPath: /api/health
+
+  # Frontend Static Site
+  - type: web
+    name: car-parts-finder-frontend
+    runtime: node
+    region: oregon
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  # PostgreSQL Database (optional - or use Supabase)
+  - name: car-parts-db
+    databaseName: car_parts_finder
+    user: car_parts_user
+    plan: free
+
