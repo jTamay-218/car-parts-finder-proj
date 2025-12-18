@@ -79,7 +79,10 @@ export const requireAdmin = (req, res, next) => {
     });
   }
 
-  if (!req.user.admin) {
+  // Check both admin flag and role
+  const isAdmin = req.user.admin === true || req.user.role === 'admin';
+  
+  if (!isAdmin) {
     return res.status(403).json({ 
       error: 'Admin access required',
       message: 'This action requires administrator privileges'

@@ -145,5 +145,122 @@ router.delete('/listings/:id', async (req, res, next) => {
   }
 });
 
+// Get conversation with all messages (admin view)
+router.get('/conversations/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Get conversation details
+    const convResult = await query(
+      `SELECT 
+        c.*,
+        buyer.first_name as buyer_first_name,
+        buyer.last_name as buyer_last_name,
+        buyer.username as buyer_username,
+        buyer.email as buyer_email,
+        seller.first_name as seller_first_name,
+        seller.last_name as seller_last_name,
+        seller.username as seller_username,
+        seller.email as seller_email,
+        pl.name as listing_name,
+        pl._id as listing_id
+      FROM conversations c
+      LEFT JOIN users buyer ON c.buyer_id = buyer._id
+      LEFT JOIN users seller ON c.seller_id = seller._id
+      LEFT JOIN product_listings pl ON c.listing_id = pl._id
+      WHERE c.id = $1`,
+      [id]
+    );
+
+    if (convResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Conversation not found'
+      });
+    }
+
+    // Get all messages
+    const messagesResult = await query(
+      `SELECT 
+        m.*,
+        u.first_name as sender_first_name,
+        u.last_name as sender_last_name,
+        u.username as sender_username
+      FROM messages m
+      LEFT JOIN users u ON m.sender_id = u._id
+      WHERE m.conversation_id = $1
+      ORDER BY m.created_at ASC`,
+      [id]
+    );
+
+    const conversation = convResult.rows[0];
+    const messages = messagesResult.rows.map(row => ({
+      id: row.id,
+      conversationId: row.conversation_id,
+      senderId: row.sender_id,
+      content: row.content,
+      readAt: row.read_at,
+      createdAt: row.created_at,
+      senderName: `${row.sender_first_name} ${row.sender_last_name}`,
+      senderUsername: row.sender_username
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        id: conversation.id,
+        buyerId: conversation.buyer_id,
+        sellerId: conversation.seller_id,
+        listingId: conversation.listing_id,
+        buyerName: `${conversation.buyer_first_name} ${conversation.buyer_last_name}`,
+        buyerEmail: conversation.buyer_email,
+        buyerUsername: conversation.buyer_username,
+        sellerName: `${conversation.seller_first_name} ${conversation.seller_last_name}`,
+        sellerEmail: conversation.seller_email,
+        sellerUsername: conversation.seller_username,
+        listingName: conversation.listing_name,
+        lastMessageAt: conversation.last_message_at,
+        createdAt: conversation.created_at,
+        messages
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete a conversation (admin only)
+router.delete('/conversations/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Delete conversation (messages will be cascade deleted)
+    await query('DELETE FROM conversations WHERE id = $1', [id]);
+
+    res.json({
+      success: true,
+      message: 'Conversation deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Delete a message (admin only)
+router.delete('/messages/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    await query('DELETE FROM messages WHERE id = $1', [id]);
+
+    res.json({
+      success: true,
+      message: 'Message deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
 
