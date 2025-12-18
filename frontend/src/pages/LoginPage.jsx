@@ -21,7 +21,11 @@ function LoginPage() {
     try {
       const result = await login(email, password);
       if (result.success) {
-        const from = location.state?.from || "/";
+        // updated 11/08
+        localStorage.setItem("token", result.token);
+        localStorage.setItem("userId", result.user.id);
+        
+        const from = location.state?.from || "/profile";
         navigate(from);
       } else {
         setError(result.error);
