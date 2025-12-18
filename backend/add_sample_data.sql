@@ -110,3 +110,5 @@ INSERT INTO product_listings (_id, name, serial_number, description, price, imag
 ('bmw-x5-brake-rotors', 'BMW X5 Brake Rotors', 'BMX5BR001', 'Premium brake rotors for BMW X5. Cross-drilled for better heat dissipation.', 125.99, NULL, 'NEW', 'AVAILABLE', 'x5-2020', 'b41e288a-3dd0-4a7e-b420-21633a43b74d', 'brake-rotors', 'cf6cc49b-b8e6-456e-a253-e97558104e72', 'd54b145f-120f-4604-bf06-fa7bd2d13125', 2020, datetime('now')),
 ('bmw-x5-windshield', 'BMW X5 Windshield', 'BMX5W001', 'OEM windshield for BMW X5 with rain sensor and heated wiper area.', 399.99, NULL, 'NEW', 'AVAILABLE', 'x5-2020', 'b41e288a-3dd0-4a7e-b420-21633a43b74d', 'windshield', 'cf6cc49b-b8e6-456e-a253-e97558104e72', 'd54b145f-120f-4604-bf06-fa7bd2d13125', 2020, datetime('now'));
 
+
+
