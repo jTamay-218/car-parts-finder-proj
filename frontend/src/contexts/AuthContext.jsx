@@ -37,6 +37,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      console.log('🔐 Attempting login to:', `${API_BASE_URL}/api/auth/login`);
+      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -45,7 +47,17 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password })
       });
 
+      console.log('📡 Response status:', response.status, response.statusText);
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('❌ Server did not return JSON. Content-Type:', contentType);
+        throw new Error('Backend server is not responding correctly. Make sure the backend is running on port 3001.');
+      }
+
       const data = await response.json();
+      console.log('📦 Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
@@ -58,6 +70,7 @@ export const AuthProvider = ({ children }) => {
         lastName: data.user.last_name,
         username: data.user.username,
         role: data.user.role,
+        admin: data.user.admin,
         token: data.token
       };
 
@@ -66,7 +79,17 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', data.token);
       return { success: true, user: userData, token: data.token };
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error('❌ Login error:', error);
+      
+      // Better error messages
+      let errorMessage = error.message;
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage = 'Cannot connect to backend server. Please make sure:\n1. Backend is running (npm start in backend folder)\n2. Backend is on port 3001\n3. Check frontend/.env has VITE_API_URL=http://localhost:3001';
+      } else if (error.message.includes('JSON')) {
+        errorMessage = 'Backend server error. Please check:\n1. Backend terminal for errors\n2. Backend is running properly\n3. Database connection is working';
+      }
+      
+      return { success: false, error: errorMessage };
     }
   };
 
