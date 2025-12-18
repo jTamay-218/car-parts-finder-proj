@@ -9,7 +9,8 @@
     "dev": "nodemon src/server.js",
     "test": "jest",
     "lint": "eslint src/",
-    "seed:users": "node seed_users.js"
+    "seed:users": "node seed_users.js",
+    "init:messages": "node init_messages_schema.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.76.1",

@@ -16,6 +16,8 @@ import partCategoryRoutes from './routes/partCategories.js';
 import carPartRoutes from './routes/carParts.js';
 import listingRoutes from './routes/listings.js';
 import searchRoutes from './routes/search.js';
+import messageRoutes from './routes/messages.js';
+import adminRoutes from './routes/admin.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -98,14 +100,20 @@ app.get('/api/products', async (req, res) => {
         pl.description,
         pl.image,
         pl.status,
+        pl.user_id as seller_id,
         cb.name as brand_name,
         cm.name as model_name,
         cm.production_year,
-        pc.name as category_name
+        pc.name as category_name,
+        u.first_name as seller_first_name,
+        u.last_name as seller_last_name,
+        u.username as seller_username,
+        u.email as seller_email
       FROM product_listings pl
       LEFT JOIN car_brands cb ON pl.brand_id = cb._id
       LEFT JOIN car_models cm ON pl.model_id = cm._id
       LEFT JOIN categories pc ON pl.category_id = pc._id
+      LEFT JOIN users u ON pl.user_id = u._id
       WHERE pl.status = 'AVAILABLE'
       ORDER BY pl.created_date DESC
     `);
@@ -113,7 +121,14 @@ app.get('/api/products', async (req, res) => {
     // Convert price to number for all rows
     const rowsWithNumericPrice = result.rows.map(row => ({
       ...row,
-      price: parseFloat(row.price)
+      price: parseFloat(row.price),
+      seller: row.seller_id ? {
+        id: row.seller_id,
+        firstName: row.seller_first_name,
+        lastName: row.seller_last_name,
+        username: row.seller_username,
+        email: row.seller_email
+      } : null
     }));
     
     res.json({
@@ -479,6 +494,8 @@ app.use('/api/part-categories', partCategoryRoutes);
 app.use('/api/car-parts', carPartRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

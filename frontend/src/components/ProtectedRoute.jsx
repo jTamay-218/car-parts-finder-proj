@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-function ProtectedRoute({ children, requireAuth = true, requireSeller = false }) {
-  const { isLoggedIn, isSeller, loading } = useAuth();
+function ProtectedRoute({ children, requireAuth = true, requireSeller = false, requireAdmin = false }) {
+  const { isLoggedIn, isSeller, isAdmin, loading } = useAuth();
 
   // Show loading while checking authentication
   if (loading) {
@@ -25,6 +25,37 @@ function ProtectedRoute({ children, requireAuth = true, requireSeller = false })
   // Check authentication requirement
   if (requireAuth && !isLoggedIn()) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check admin requirement
+  if (requireAdmin && !isAdmin()) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: 'var(--gray-50)'
+      }}>
+        <div className="card text-center" style={{ padding: '3rem', maxWidth: '500px' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>👑</div>
+          <h2 style={{ color: 'var(--gray-800)', marginBottom: '1rem' }}>
+            Admin Access Required
+          </h2>
+          <p style={{ color: 'var(--gray-600)', marginBottom: '1.5rem' }}>
+            This page is only accessible to administrators.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <button 
+              className="btn btn-outline"
+              onClick={() => window.location.href = '/'}
+            >
+              🏠 Go Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Check seller requirement

@@ -27,9 +27,9 @@ const createUser = async (userData) => {
   
   // Insert into database
   const result = await query(
-    `INSERT INTO users (id, first_name, last_name, username, email, password, role, admin, created_date)
+    `INSERT INTO users (_id, first_name, last_name, username, email, password, role, admin, created_date)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-     RETURNING id, first_name, last_name, username, email, role, admin, created_date`,
+     RETURNING _id as id, first_name, last_name, username, email, role, admin, created_date`,
     [userId, firstName, lastName, username, email, hashedPassword, role, admin]
   );
   
@@ -38,8 +38,8 @@ const createUser = async (userData) => {
 
 // Check if user already exists
 const userExists = async (email, username) => {
-  const emailCheck = await query('SELECT id FROM users WHERE email = $1', [email]);
-  const usernameCheck = await query('SELECT id FROM users WHERE username = $1', [username]);
+  const emailCheck = await query('SELECT _id FROM users WHERE email = $1', [email]);
+  const usernameCheck = await query('SELECT _id FROM users WHERE username = $1', [username]);
   
   return {
     emailExists: emailCheck.rows.length > 0,

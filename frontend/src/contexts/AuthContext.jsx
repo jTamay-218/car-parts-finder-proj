@@ -34,38 +34,37 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = async (email, password, userType = 'buyer') => {
+  const login = async (email, password) => {
     try {
-      // Simulate API call - in real app, this would call your backend
-      const mockUser = {
-        id: '1',
-        email: email,
-        name: email.split('@')[0],
-        type: userType, // 'buyer' or 'seller'
-        avatar: '👤',
-        joinedDate: new Date().toISOString()
-      };
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-      // Simulate different response based on credentials
-      if (email === 'seller@example.com' && password === 'seller123') {
-        mockUser.type = 'seller';
-        mockUser.name = 'John Seller';
-        mockUser.avatar = '👨‍💼';
-      } else if (email === 'buyer@example.com' && password === 'buyer123') {
-        mockUser.type = 'buyer';
-        mockUser.name = 'Jane Buyer';
-        mockUser.avatar = '👩‍🛒';
-      } else if (email === 'admin@example.com' && password === 'admin123') {
-        mockUser.type = 'admin';
-        mockUser.name = 'Admin User';
-        mockUser.avatar = '👨‍💻';
-      } else {
-        throw new Error('Invalid credentials');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
       }
 
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      return { success: true, user: mockUser };
+      const userData = {
+        id: data.user.id,
+        email: data.user.email,
+        firstName: data.user.first_name,
+        lastName: data.user.last_name,
+        username: data.user.username,
+        role: data.user.role,
+        token: data.token
+      };
+
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', data.token);
+      return { success: true, user: userData, token: data.token };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -74,18 +73,23 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   const isSeller = () => {
-    return user && (user.type === 'seller' || user.type === 'admin');
+    return user && (user.role === 'seller' || user.role === 'admin' || user.admin);
   };
 
   const isBuyer = () => {
-    return user && (user.type === 'buyer' || user.type === 'admin');
+    return user && (user.role === 'buyer' || user.role === 'admin' || user.admin);
   };
 
   const isLoggedIn = () => {
     return user !== null;
+  };
+
+  const isAdmin = () => {
+    return user && (user.role === 'admin' || user.admin === true);
   };
 
   const value = {
@@ -95,6 +99,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isSeller,
     isBuyer,
+    isAdmin,
     isLoggedIn
   };
 

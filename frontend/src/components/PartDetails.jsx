@@ -1,9 +1,71 @@
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 function PartDetails({ part, onClose }) {
   const { addToCart } = useCart();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleContactSeller = async () => {
+    if (!isLoggedIn()) {
+      alert('Please log in to contact the seller');
+      navigate('/login', { state: { from: window.location.pathname } });
+      return;
+    }
+
+    if (!part.seller || !part.seller.id) {
+      alert('Seller information not available');
+      return;
+    }
+
+    // Don't allow users to message themselves
+    const userId = user?.id || user?.userId;
+    if (user && userId === part.seller.id) {
+      alert('You cannot message yourself');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token') || (user && user.token);
+      if (!token) {
+        alert('Please log in to contact the seller');
+        navigate('/login');
+        return;
+      }
+
+      // Create or get conversation
+      const response = await fetch(`${API_BASE_URL}/api/messages/conversations`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sellerId: part.seller.id,
+          listingId: part.id
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Close the modal first
+          onClose();
+          // Navigate to messages page
+          navigate('/messages');
+        }
+      } else {
+        const errorData = await response.json();
+        console.error('API Error:', errorData);
+        alert(errorData.message || 'Failed to start conversation');
+      }
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('Failed to start conversation. Please try again.');
+    }
+  };
 
   const getConditionColor = (condition) => {
     switch (condition?.toUpperCase()) {
@@ -294,51 +356,51 @@ function PartDetails({ part, onClose }) {
             )}
 
             {/* Seller Info */}
-            <div style={{
-              backgroundColor: "var(--gray-50)",
-              padding: "1rem",
-              borderRadius: "0.75rem",
-              marginBottom: "1.5rem"
-            }}>
-              <h4 style={{ 
-                margin: "0 0 0.5rem 0", 
-                color: "var(--gray-800)",
-                fontSize: "0.875rem",
-                fontWeight: "600"
+            {part.seller && (
+              <div style={{
+                backgroundColor: "var(--gray-50)",
+                padding: "1rem",
+                borderRadius: "0.75rem",
+                marginBottom: "1.5rem"
               }}>
-                Seller Information
-              </h4>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "var(--primary-color)",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
+                <h4 style={{ 
+                  margin: "0 0 0.5rem 0", 
+                  color: "var(--gray-800)",
+                  fontSize: "0.875rem",
                   fontWeight: "600"
                 }}>
-                  JS
-                </div>
-                <div>
-                  <div style={{ fontWeight: "600", color: "var(--gray-800)" }}>
-                    John's Auto Parts
+                  Seller Information
+                </h4>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    backgroundColor: "var(--primary-color)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                    fontWeight: "600"
+                  }}>
+                    {part.seller.firstName?.[0] || part.seller.username?.[0] || 'S'}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--gray-500)" }}>
-                    ⭐ 4.9 (127 reviews) • Verified Seller
+                  <div>
+                    <div style={{ fontWeight: "600", color: "var(--gray-800)" }}>
+                      {part.seller.firstName} {part.seller.lastName}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--gray-500)" }}>
+                      @{part.seller.username} • Verified Seller
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Action Buttons */}
             <div style={{ display: "flex", gap: "1rem" }}>
               <button
-                onClick={() => {
-                  alert('Contact seller functionality would open here!');
-                }}
+                onClick={handleContactSeller}
                 className="btn btn-secondary"
                 style={{ flex: 1 }}
               >

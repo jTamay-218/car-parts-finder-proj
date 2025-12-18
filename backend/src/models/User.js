@@ -3,14 +3,14 @@ import bcrypt from 'bcryptjs';
 
 export class User {
   constructor(data) {
-    this.id = data.id;
+    this.id = data.id || data._id;
     this.firstName = data.first_name;
     this.lastName = data.last_name;
     this.username = data.username;
     this.email = data.email;
     this.password = data.password;
     this.role = data.role || 'buyer';
-    this.admin = data.admin;
+    this.admin = data.admin || false;
     this.createdDate = data.created_date;
   }
 
@@ -28,7 +28,7 @@ export class User {
     const result = await query(
       `INSERT INTO users (first_name, last_name, username, email, password, role, admin)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
+       RETURNING *, _id as id`,
       [firstName, lastName, username, email, hashedPassword, role, isAdmin]
     );
     
@@ -37,19 +37,19 @@ export class User {
 
   // Find user by ID
   static async findById(id) {
-    const result = await query('SELECT * FROM users WHERE id = $1', [id]);
+    const result = await query('SELECT *, _id as id, COALESCE(role, \'buyer\') as role FROM users WHERE _id = $1', [id]);
     return result.rows.length > 0 ? new User(result.rows[0]) : null;
   }
 
   // Find user by email
   static async findByEmail(email) {
-    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await query('SELECT *, _id as id, COALESCE(role, \'buyer\') as role FROM users WHERE email = $1', [email]);
     return result.rows.length > 0 ? new User(result.rows[0]) : null;
   }
 
   // Find user by username
   static async findByUsername(username) {
-    const result = await query('SELECT * FROM users WHERE username = $1', [username]);
+    const result = await query('SELECT *, _id as id, COALESCE(role, \'buyer\') as role FROM users WHERE username = $1', [username]);
     return result.rows.length > 0 ? new User(result.rows[0]) : null;
   }
 
@@ -57,7 +57,7 @@ export class User {
   static async findAll(page = 1, limit = 10) {
     const offset = (page - 1) * limit;
     const result = await query(
-      'SELECT * FROM users ORDER BY created_date DESC LIMIT $1 OFFSET $2',
+      'SELECT *, _id as id FROM users ORDER BY created_date DESC LIMIT $1 OFFSET $2',
       [limit, offset]
     );
     return result.rows.map(row => new User(row));
@@ -84,7 +84,7 @@ export class User {
 
     values.push(this.id);
     const result = await query(
-      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+      `UPDATE users SET ${updates.join(', ')} WHERE _id = $${paramCount} RETURNING *, _id as id`,
       values
     );
 
@@ -97,7 +97,7 @@ export class User {
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
     
     const result = await query(
-      'UPDATE users SET password = $1 WHERE id = $2 RETURNING *',
+      'UPDATE users SET password = $1 WHERE _id = $2 RETURNING *, _id as id',
       [hashedPassword, this.id]
     );
     
@@ -106,7 +106,7 @@ export class User {
 
   // Delete user
   async delete() {
-    await query('DELETE FROM users WHERE id = $1', [this.id]);
+    await query('DELETE FROM users WHERE _id = $1', [this.id]);
     return true;
   }
 

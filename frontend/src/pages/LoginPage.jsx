@@ -168,9 +168,9 @@ function LoginPage() {
               Demo Credentials:
             </h4>
             <div style={{ fontSize: '0.75rem', color: 'var(--gray-600)', lineHeight: '1.4' }}>
-              <div><strong>Seller:</strong> seller@example.com / seller123</div>
-              <div><strong>Buyer:</strong> buyer@example.com / buyer123</div>
-              <div><strong>Admin:</strong> admin@example.com / admin123</div>
+              <div><strong>Seller:</strong> seller@carparts.com / Seller123!@#</div>
+              <div><strong>Buyer:</strong> buyer@carparts.com / Buyer123!@#</div>
+              <div><strong>Admin:</strong> admin@carparts.com / Admin123!@#</div>
             </div>
           </div>
 

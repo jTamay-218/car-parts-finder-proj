@@ -4,7 +4,7 @@ import { useCart } from '../contexts/CartContext';
 
 function NavBar() {
   const location = useLocation();
-  const { user, logout, isSeller, isLoggedIn } = useAuth();
+  const { user, logout, isSeller, isAdmin, isLoggedIn } = useAuth();
   const { cartItems } = useCart();
   
   // Base navigation items for all users
@@ -18,6 +18,12 @@ function NavBar() {
     { label: 'My Listings', path: '/listings', icon: '📋' }
   ];
 
+  // Admin-specific navigation items
+  const adminNavItems = [
+    { label: 'Admin Messages', path: '/admin/messages', icon: '👑' },
+    { label: 'Admin Listings', path: '/admin/listings', icon: '⚙️' }
+  ];
+
   // User-specific navigation items
   const userNavItems = [
     { label: 'Messages', path: '/messages', icon: '💬' },
@@ -28,6 +34,7 @@ function NavBar() {
   const navItems = [
     ...baseNavItems,
     ...(isSeller() ? sellerNavItems : []),
+    ...(isAdmin() ? adminNavItems : []),
     ...(isLoggedIn() ? userNavItems : [])
   ];
 

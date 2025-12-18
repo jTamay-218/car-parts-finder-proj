@@ -13,6 +13,9 @@ import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
 import CartPage from "./pages/CartPage";
 import OrderPage from "./pages/OrderPage";
+import MessagesPage from "./pages/MessagesPage";
+import AdminMessagesPage from "./pages/AdminMessagesPage";
+import AdminListingsPage from "./pages/AdminListingsPage";
 
 function App() {
   return (
@@ -50,10 +53,7 @@ function App() {
               path="/messages"
               element={
                 <ProtectedRoute requireAuth={true}>
-                  <div style={{ padding: "2rem", textAlign: "center" }}>
-                    <h2>💬 Messages</h2>
-                    <p>Coming soon...</p>
-                  </div>
+                  <MessagesPage />
                 </ProtectedRoute>
               }
             />
@@ -61,10 +61,25 @@ function App() {
               path="/profile"
               element={
                 <ProtectedRoute requireAuth={true}>
-                  <div style={{ padding: "2rem", textAlign: "center" }}>
-                    <h2>👤 Profile</h2>
-                    <ProfilePage />
-                  </div>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin-only pages */}
+            <Route
+              path="/admin/messages"
+              element={
+                <ProtectedRoute requireAuth={true} requireAdmin={true}>
+                  <AdminMessagesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/listings"
+              element={
+                <ProtectedRoute requireAuth={true} requireAdmin={true}>
+                  <AdminListingsPage />
                 </ProtectedRoute>
               }
             />
